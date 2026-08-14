@@ -18,10 +18,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -129,6 +131,34 @@ class UserServiceTest {
                     .extracting("name", "email")
                     .containsExactly("Pedro", "pedro@email.com");
         }
+
+        @Test
+        @DisplayName("should throw IllegalArgumentException when name is empty")
+        void shouldThrowExceptionWhenNameIsEmpty() {
+            RegisterRequest invalidRequest = new RegisterRequest("", "pedro@email.com", "password123");
+
+            assertThatThrownBy(() -> userService.register(invalidRequest))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw IllegalArgumentException when email is empty")
+        void shouldThrowExceptionWhenEmailIsEmpty() {
+            RegisterRequest invalidRequest = new RegisterRequest("Pedro", "", "password123");
+
+            assertThatThrownBy(() -> userService.register(invalidRequest))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("should throw IllegalArgumentException when password is empty")
+        void shouldThrowExceptionWhenPasswordIsEmpty() {
+            RegisterRequest invalidRequest = new RegisterRequest("Pedro", "pedro@email.com", "");
+            when(passwordEncoder.encode("")).thenThrow(new IllegalArgumentException("Password cannot be null or empty."));
+
+            assertThatThrownBy(() -> userService.register(invalidRequest))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Nested
@@ -212,6 +242,51 @@ class UserServiceTest {
                     .isNotNull()
                     .extracting("token")
                     .isEqualTo(generatedToken);
+        }
+
+        @Test
+        @DisplayName("should throw BadCredentialsException when authentication fails")
+        void shouldThrowBadCredentialsExceptionWhenAuthenticationFails() {
+            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                    .thenThrow(new BadCredentialsException("Invalid credentials"));
+
+            assertThatThrownBy(() -> userService.login(loginRequest))
+                    .isInstanceOf(BadCredentialsException.class)
+                    .hasMessage("Invalid credentials");
+        }
+
+        @Test
+        @DisplayName("should throw exception when email is empty")
+        void shouldThrowExceptionWhenEmailIsEmpty() {
+            LoginRequest invalidRequest = new LoginRequest("", "password123");
+            var authentication = mock(org.springframework.security.core.Authentication.class);
+            when(authentication.getPrincipal()).thenReturn(authenticatedUser);
+            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                    .thenReturn(authentication);
+
+            userService.login(invalidRequest);
+
+            ArgumentCaptor<UsernamePasswordAuthenticationToken> tokenCaptor =
+                    ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+            verify(authenticationManager).authenticate(tokenCaptor.capture());
+            assertThat(tokenCaptor.getValue().getPrincipal()).isEqualTo("");
+        }
+
+        @Test
+        @DisplayName("should throw exception when password is empty")
+        void shouldThrowExceptionWhenPasswordIsEmpty() {
+            LoginRequest invalidRequest = new LoginRequest("pedro@email.com", "");
+            var authentication = mock(org.springframework.security.core.Authentication.class);
+            when(authentication.getPrincipal()).thenReturn(authenticatedUser);
+            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                    .thenReturn(authentication);
+
+            userService.login(invalidRequest);
+
+            ArgumentCaptor<UsernamePasswordAuthenticationToken> tokenCaptor =
+                    ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
+            verify(authenticationManager).authenticate(tokenCaptor.capture());
+            assertThat(tokenCaptor.getValue().getCredentials()).isEqualTo("");
         }
     }
 }
