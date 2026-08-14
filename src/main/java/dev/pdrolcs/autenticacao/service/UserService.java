@@ -1,11 +1,14 @@
 package dev.pdrolcs.autenticacao.service;
 
+import dev.pdrolcs.autenticacao.config.TokenConfig;
 import dev.pdrolcs.autenticacao.dto.request.LoginRequest;
 import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
 import dev.pdrolcs.autenticacao.dto.response.LoginResponse;
 import dev.pdrolcs.autenticacao.dto.response.RegisterResponse;
 import dev.pdrolcs.autenticacao.entity.User;
 import dev.pdrolcs.autenticacao.repository.UserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +17,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final TokenConfig tokenConfig;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenConfig tokenConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.tokenConfig = tokenConfig;
     }
 
     public RegisterResponse register(RegisterRequest request) {
@@ -31,6 +38,10 @@ public class UserService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        return null;
+        var userAndPass = new UsernamePasswordAuthenticationToken(request.email(), request.password());
+        var authentication = authenticationManager.authenticate(userAndPass);
+        var user = (User) authentication.getPrincipal();
+        var token = tokenConfig.generateToken(user);
+        return new LoginResponse(token);
     }
 }

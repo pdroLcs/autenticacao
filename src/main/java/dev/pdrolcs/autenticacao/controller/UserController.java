@@ -1,6 +1,8 @@
 package dev.pdrolcs.autenticacao.controller;
 
+import dev.pdrolcs.autenticacao.dto.request.LoginRequest;
 import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
+import dev.pdrolcs.autenticacao.dto.response.LoginResponse;
 import dev.pdrolcs.autenticacao.dto.response.RegisterResponse;
 import dev.pdrolcs.autenticacao.service.UserService;
 import jakarta.validation.Valid;
@@ -24,6 +26,11 @@ public class UserController {
     @PostMapping("register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(request));
+    }
+
+    @PostMapping("login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(userService.login(request));
     }
 
 }
