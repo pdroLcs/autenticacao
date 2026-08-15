@@ -6,6 +6,7 @@ import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
 import dev.pdrolcs.autenticacao.dto.response.LoginResponse;
 import dev.pdrolcs.autenticacao.dto.response.RegisterResponse;
 import dev.pdrolcs.autenticacao.entity.User;
+import dev.pdrolcs.autenticacao.exception.EmailAlreadyRegisteredException;
 import dev.pdrolcs.autenticacao.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,9 @@ public class UserService {
     }
 
     public RegisterResponse register(RegisterRequest request) {
+        if (userRepository.existsUserByEmail(request.email())) {
+            throw new EmailAlreadyRegisteredException("This email is already in use");
+        }
         var user = new User();
         user.setPublicId();
         user.changeName(request.name());
