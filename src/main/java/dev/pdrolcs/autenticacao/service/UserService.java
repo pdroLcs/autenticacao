@@ -13,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class UserService {
 
@@ -45,7 +47,17 @@ public class UserService {
         var userAndPass = new UsernamePasswordAuthenticationToken(request.email(), request.password());
         var authentication = authenticationManager.authenticate(userAndPass);
         var user = (User) authentication.getPrincipal();
-        var token = tokenConfig.generateToken(user);
-        return new LoginResponse(token);
+        var accessToken = tokenConfig.generateAccessToken(user);
+        var refreshToken = tokenConfig.generateRefreshToken(user);
+        return new LoginResponse(accessToken, refreshToken);
+    }
+
+    public LoginResponse refresh(String refreshToken) {
+        var decodedToken = tokenConfig.validateRefreshToken(refreshToken);
+        var publicId = UUID.fromString(decodedToken.getClaim("userId").asString());
+        var user = userRepository.findUserByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        var newAccessToken = tokenConfig.generateAccessToken((User) user);
+        return new LoginResponse(newAccessToken, refreshToken);
     }
 }

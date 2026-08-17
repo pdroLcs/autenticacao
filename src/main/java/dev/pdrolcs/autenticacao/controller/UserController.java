@@ -1,6 +1,7 @@
 package dev.pdrolcs.autenticacao.controller;
 
 import dev.pdrolcs.autenticacao.dto.request.LoginRequest;
+import dev.pdrolcs.autenticacao.dto.request.RefreshTokenRequest;
 import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
 import dev.pdrolcs.autenticacao.dto.response.LoginResponse;
 import dev.pdrolcs.autenticacao.dto.response.RegisterResponse;
@@ -31,6 +32,11 @@ public class UserController {
     @PostMapping("login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
+    }
+
+    @PostMapping("refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(userService.refresh(request.refreshToken()));
     }
 
 }

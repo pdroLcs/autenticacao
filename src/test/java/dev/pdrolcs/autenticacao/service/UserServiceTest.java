@@ -186,7 +186,7 @@ class UserServiceTest {
             when(authentication.getPrincipal()).thenReturn(authenticatedUser);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
-            when(tokenConfig.generateToken(authenticatedUser)).thenReturn(generatedToken);
+            when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
             LoginResponse response = userService.login(loginRequest);
 
@@ -200,7 +200,7 @@ class UserServiceTest {
             when(authentication.getPrincipal()).thenReturn(authenticatedUser);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
-            when(tokenConfig.generateToken(authenticatedUser)).thenReturn(generatedToken);
+            when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
             userService.login(loginRequest);
 
@@ -215,16 +215,16 @@ class UserServiceTest {
 
         @Test
         @DisplayName("should generate token with authenticated user")
-        void shouldGenerateTokenWithAuthenticatedUser() {
+        void shouldgenerateAccessTokenWithAuthenticatedUser() {
             var authentication = mock(org.springframework.security.core.Authentication.class);
             when(authentication.getPrincipal()).thenReturn(authenticatedUser);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
-            when(tokenConfig.generateToken(authenticatedUser)).thenReturn(generatedToken);
+            when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
             userService.login(loginRequest);
 
-            verify(tokenConfig).generateToken(authenticatedUser);
+            verify(tokenConfig).generateAccessToken(authenticatedUser);
         }
 
         @Test
@@ -234,7 +234,7 @@ class UserServiceTest {
             when(authentication.getPrincipal()).thenReturn(authenticatedUser);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
-            when(tokenConfig.generateToken(authenticatedUser)).thenReturn(generatedToken);
+            when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
             LoginResponse response = userService.login(loginRequest);
 
