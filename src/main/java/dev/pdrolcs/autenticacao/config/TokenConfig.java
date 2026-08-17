@@ -58,13 +58,13 @@ public class TokenConfig {
         }
     }
 
-    public DecodedJWT validateRefreshToken(String refreshToken) {
+    public void validateRefreshToken(String refreshToken) {
         try {
             var algorithm = Algorithm.HMAC256(secret);
             var verifier = JWT.require(algorithm)
                     .withClaim("type", "refresh")
                     .build();
-            return verifier.verify(refreshToken);
+            verifier.verify(refreshToken);
         } catch (Exception e) {
             throw new InvalidTokenException("Invalid refresh token");
         }
