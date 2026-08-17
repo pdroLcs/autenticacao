@@ -86,4 +86,13 @@ public class UserService {
 
         return new LoginResponse(newAccessToken, newRefreshToken);
     }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        tokenConfig.validateRefreshToken(refreshToken);
+        var storedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
+        storedToken.setRevoked(true);
+        refreshTokenRepository.save(storedToken);
+    }
 }
