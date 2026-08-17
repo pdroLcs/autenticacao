@@ -15,14 +15,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 public class UserService {
-
-    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.refresh.token.expiration}")
     private long expirationRefreshTokenTime;
@@ -32,6 +30,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final TokenConfig tokenConfig;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenConfig tokenConfig, RefreshTokenService refreshTokenService, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
@@ -65,6 +64,7 @@ public class UserService {
         return new LoginResponse(accessToken, refreshToken);
     }
 
+    @Transactional
     public LoginResponse refresh(String refreshToken) {
         tokenConfig.validateRefreshToken(refreshToken);
         var storedToken = refreshTokenRepository.findByToken(refreshToken)
@@ -76,7 +76,14 @@ public class UserService {
             throw new InvalidTokenException("Token is expired");
         }
         var user = storedToken.getUser();
+
+        storedToken.setRevoked(true);
+        refreshTokenRepository.save(storedToken);
+
         var newAccessToken = tokenConfig.generateAccessToken(user);
-        return new LoginResponse(newAccessToken, refreshToken);
+        var newRefreshToken = tokenConfig.generateRefreshToken(user);
+        refreshTokenService.save(user, newRefreshToken, Instant.now().plusSeconds(expirationRefreshTokenTime));
+
+        return new LoginResponse(newAccessToken, newRefreshToken);
     }
 }
