@@ -1,5 +1,6 @@
 package dev.pdrolcs.autenticacao.controller;
 
+import dev.pdrolcs.autenticacao.docs.UserControllerDoc;
 import dev.pdrolcs.autenticacao.dto.request.LoginRequest;
 import dev.pdrolcs.autenticacao.dto.request.RefreshTokenRequest;
 import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-public class UserController {
+public class UserController implements UserControllerDoc {
 
     private final UserService userService;
 
