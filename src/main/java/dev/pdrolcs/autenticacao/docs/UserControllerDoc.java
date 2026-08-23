@@ -1,12 +1,14 @@
 package dev.pdrolcs.autenticacao.docs;
 
 import dev.pdrolcs.autenticacao.dto.request.LoginRequest;
-import dev.pdrolcs.autenticacao.dto.request.RefreshTokenRequest;
 import dev.pdrolcs.autenticacao.dto.request.RegisterRequest;
+import dev.pdrolcs.autenticacao.dto.response.LoginHttpResponse;
 import dev.pdrolcs.autenticacao.dto.response.LoginResponse;
 import dev.pdrolcs.autenticacao.dto.response.RegisterResponse;
 import dev.pdrolcs.autenticacao.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "User Controller", description = "Endpoints for user authentication and management")
@@ -108,13 +111,12 @@ public interface UserControllerDoc {
                     @ApiResponse(
                             responseCode = "200",
                             description = "User logged in successfully",
-                            content = @Content(schema = @Schema(implementation = LoginResponse.class),
+                            content = @Content(schema = @Schema(implementation = LoginHttpResponse.class),
                             examples = @ExampleObject(
-                                    name = "LoginResponse Example",
+                                    name = "LoginHttpResponse Example",
                                     value = """
                                             {
-                                                "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                                                "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                                "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                                             }
                                             """
                             ))
@@ -161,7 +163,7 @@ public interface UserControllerDoc {
                     )
             }
     )
-    ResponseEntity<LoginResponse> login(
+    ResponseEntity<LoginHttpResponse> login(
             @Valid
             @RequestBody
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -236,23 +238,16 @@ public interface UserControllerDoc {
                     )
             }
     )
-    ResponseEntity<LoginResponse> refresh(
-            @Valid
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Refresh token data",
+    ResponseEntity<LoginHttpResponse> refresh(
+            @Parameter(
+                    name = "refresh_token",
+                    description = "Refresh token stored in a HttpOnly cookie",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = RefreshTokenRequest.class),
-                    examples = @ExampleObject(
-                            name = "RefreshTokenRequest Example",
-                            value = """
-                                    {
-                                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                                    }
-                                    """
-                    ))
+                    in = ParameterIn.COOKIE,
+                    example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             )
-            RefreshTokenRequest request);
+            @CookieValue("refresh_token")
+            String refreshToken);
 
     @Operation(
             summary = "Logout a user",
@@ -301,20 +296,13 @@ public interface UserControllerDoc {
             }
     )
     ResponseEntity<Void> logout(
-            @Valid
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Refresh token data for logout",
+            @Parameter(
+                    name = "refresh_token",
+                    description = "Refresh token stored in a HttpOnly cookie",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = RefreshTokenRequest.class),
-                    examples = @ExampleObject(
-                            name = "RefreshTokenRequest Example",
-                            value = """
-                                    {
-                                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                                    }
-                                    """
-                    ))
+                    in = ParameterIn.COOKIE,
+                    example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             )
-            RefreshTokenRequest request);
+            @CookieValue("refresh_token")
+            String refreshToken);
 }
