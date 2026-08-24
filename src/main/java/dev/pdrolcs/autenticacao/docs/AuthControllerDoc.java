@@ -19,8 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Tag(name = "User Controller", description = "Endpoints for user authentication and management")
-public interface UserControllerDoc {
+@Tag(name = "Auth Controller", description = "Endpoints for user authentication and management")
+public interface AuthControllerDoc {
 
     @Operation(
             summary = "Register a new user",

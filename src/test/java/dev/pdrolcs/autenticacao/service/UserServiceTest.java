@@ -31,8 +31,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserService")
-class UserServiceTest {
+@DisplayName("AuthService")
+class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -47,7 +47,7 @@ class UserServiceTest {
     private TokenConfig tokenConfig;
 
     @InjectMocks
-    private UserService userService;
+    private AuthService authService;
 
     @Captor
     private ArgumentCaptor<User> userCaptor;
@@ -69,7 +69,7 @@ class UserServiceTest {
             String encodedPassword = "encodedPassword123";
             when(passwordEncoder.encode("password123")).thenReturn(encodedPassword);
 
-            RegisterResponse response = userService.register(registerRequest);
+            RegisterResponse response = authService.register(registerRequest);
 
             verify(userRepository).save(userCaptor.capture());
             User savedUser = userCaptor.getValue();
@@ -89,7 +89,7 @@ class UserServiceTest {
             String encodedPassword = "encodedPassword123";
             when(passwordEncoder.encode(rawPassword)).thenReturn(encodedPassword);
 
-            userService.register(registerRequest);
+            authService.register(registerRequest);
 
             verify(passwordEncoder).encode(rawPassword);
             verify(userRepository).save(userCaptor.capture());
@@ -101,7 +101,7 @@ class UserServiceTest {
         void shouldGenerateUniquePublicId() {
             when(passwordEncoder.encode(anyString())).thenReturn("encoded");
 
-            userService.register(registerRequest);
+            authService.register(registerRequest);
 
             verify(userRepository).save(userCaptor.capture());
             User savedUser = userCaptor.getValue();
@@ -114,7 +114,7 @@ class UserServiceTest {
         void shouldSaveUserInRepository() {
             when(passwordEncoder.encode(anyString())).thenReturn("encoded");
 
-            userService.register(registerRequest);
+            authService.register(registerRequest);
 
             verify(userRepository).save(any(User.class));
         }
@@ -124,7 +124,7 @@ class UserServiceTest {
         void shouldReturnRegisterResponseWithCorrectData() {
             when(passwordEncoder.encode(anyString())).thenReturn("encoded");
 
-            RegisterResponse response = userService.register(registerRequest);
+            RegisterResponse response = authService.register(registerRequest);
 
             assertThat(response)
                     .isNotNull()
@@ -137,7 +137,7 @@ class UserServiceTest {
         void shouldThrowExceptionWhenNameIsEmpty() {
             RegisterRequest invalidRequest = new RegisterRequest("", "pedro@email.com", "password123");
 
-            assertThatThrownBy(() -> userService.register(invalidRequest))
+            assertThatThrownBy(() -> authService.register(invalidRequest))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -146,7 +146,7 @@ class UserServiceTest {
         void shouldThrowExceptionWhenEmailIsEmpty() {
             RegisterRequest invalidRequest = new RegisterRequest("Pedro", "", "password123");
 
-            assertThatThrownBy(() -> userService.register(invalidRequest))
+            assertThatThrownBy(() -> authService.register(invalidRequest))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -156,7 +156,7 @@ class UserServiceTest {
             RegisterRequest invalidRequest = new RegisterRequest("Pedro", "pedro@email.com", "");
             when(passwordEncoder.encode("")).thenThrow(new IllegalArgumentException("Password cannot be null or empty."));
 
-            assertThatThrownBy(() -> userService.register(invalidRequest))
+            assertThatThrownBy(() -> authService.register(invalidRequest))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -188,9 +188,9 @@ class UserServiceTest {
                     .thenReturn(authentication);
             when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
-            LoginResponse response = userService.login(loginRequest);
+            LoginResponse response = authService.login(loginRequest);
 
-            assertThat(response.token()).isEqualTo(generatedToken);
+            assertThat(response.accessToken()).isEqualTo(generatedToken);
         }
 
         @Test
@@ -202,7 +202,7 @@ class UserServiceTest {
                     .thenReturn(authentication);
             when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
-            userService.login(loginRequest);
+            authService.login(loginRequest);
 
             ArgumentCaptor<UsernamePasswordAuthenticationToken> tokenCaptor =
                     ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
@@ -222,7 +222,7 @@ class UserServiceTest {
                     .thenReturn(authentication);
             when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
-            userService.login(loginRequest);
+            authService.login(loginRequest);
 
             verify(tokenConfig).generateAccessToken(authenticatedUser);
         }
@@ -236,7 +236,7 @@ class UserServiceTest {
                     .thenReturn(authentication);
             when(tokenConfig.generateAccessToken(authenticatedUser)).thenReturn(generatedToken);
 
-            LoginResponse response = userService.login(loginRequest);
+            LoginResponse response = authService.login(loginRequest);
 
             assertThat(response)
                     .isNotNull()
@@ -250,7 +250,7 @@ class UserServiceTest {
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenThrow(new BadCredentialsException("Invalid credentials"));
 
-            assertThatThrownBy(() -> userService.login(loginRequest))
+            assertThatThrownBy(() -> authService.login(loginRequest))
                     .isInstanceOf(BadCredentialsException.class)
                     .hasMessage("Invalid credentials");
         }
@@ -264,7 +264,7 @@ class UserServiceTest {
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
 
-            userService.login(invalidRequest);
+            authService.login(invalidRequest);
 
             ArgumentCaptor<UsernamePasswordAuthenticationToken> tokenCaptor =
                     ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
@@ -281,7 +281,7 @@ class UserServiceTest {
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(authentication);
 
-            userService.login(invalidRequest);
+            authService.login(invalidRequest);
 
             ArgumentCaptor<UsernamePasswordAuthenticationToken> tokenCaptor =
                     ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
